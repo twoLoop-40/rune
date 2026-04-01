@@ -1,0 +1,46 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/engine",
+    "crates/tools",
+    "crates/api",
+    "crates/tui",
+    "crates/server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+
+[workspace.dependencies]
+# Internal crates
+claude-code-core = { path = "crates/core" }
+claude-code-engine = { path = "crates/engine" }
+claude-code-tools = { path = "crates/tools" }
+claude-code-api = { path = "crates/api" }
+claude-code-tui = { path = "crates/tui" }
+claude-code-server = { path = "crates/server" }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Async stream
+tokio-stream = "0.1"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"

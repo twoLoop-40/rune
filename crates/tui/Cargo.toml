@@ -1,0 +1,12 @@
+[package]
+name = "claude-code-tui"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+claude-code-core = { workspace = true }
+claude-code-engine = { workspace = true }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,6 @@
+{
+  "root_module": "Specs",
+  "root_dir": ".",
+  "lake_target": "Specs",
+  "scan_extensions": ".lean,.ts,.tsx"
+}
