@@ -1,6 +1,9 @@
 /-
-  Project/ProjectGoalSpec.lean — Claude Code 프로젝트 목표 명세
-  프로젝트의 도메인별 완성도를 추적하는 최상위 Spec.
+  Project/ProjectGoalSpec.lean — rune 프로젝트 목표 명세
+  LLM-agnostic agent engine의 도메인별 완성도 추적.
+
+  Milestone 1 (vertical slice): API + Bash/FileRead/FileWrite + CLI
+  → "cargo run -- '질문'" 으로 실제 동작하는 에이전트
 -/
 import Common.Types
 
@@ -41,137 +44,214 @@ structure DomainGoal where
   spec        : SpecStage
   impl        : ImplStage
   specFile    : Option String := none
+  rustFile    : Option String := none
   sorryCount  : Nat := 0
+  milestone   : Nat := 0    -- 0=foundation, 1=vertical-slice, 2=expand, 3=polish
   deriving Repr
 
 -- ═══════════════════════════════════════════════
--- Project Goals (All Domains)
+-- Milestone 0: Foundation (완료)
+-- Lean Spec + Rust 타입 + 엔진 뼈대
 -- ═══════════════════════════════════════════════
 
-/-- 프로젝트 전체 목표. -/
+-- ═══════════════════════════════════════════════
+-- Milestone 1: Vertical Slice (현재 목표)
+-- API provider + 도구 3개 + CLI = 동작하는 에이전트
+-- ═══════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════
+-- Milestone 2: Expand
+-- 나머지 빌트인 도구 + TUI + 세션 관리
+-- ═══════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════
+-- Milestone 3: Polish
+-- MCP/Plugin + Bridge + gdd/poincare 통합
+-- ═══════════════════════════════════════════════
+
 def allGoals : List DomainGoal := [
-  -- 공통 타입
+  -- ════════ Milestone 0: Foundation (완료) ════════
+
   { domain := "Common.Types"
-    description := "브랜드 ID, 타임스탬프, 에러, 파일 경로, JSON 값 등 공통 기초 타입"
-    spec := .compiled
-    impl := .deployed
+    description := "브랜드 ID, 타임스탬프, 에러, JSON 등 공통 타입"
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Common/Types.lean"
-    sorryCount := 0 },
+    rustFile := "crates/core/src/types.rs"
+    milestone := 0 },
 
-  -- 도구 시스템
-  { domain := "Domain.Tool"
-    description := "Tool<Input,Output,Progress> 인터페이스. 40+ 빌트인 도구의 스키마, 권한, 동시성 모델"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/Tool.lean"
-    sorryCount := 1 },
-
-  -- 태스크 시스템
-  { domain := "Domain.Task"
-    description := "백그라운드 태스크 상태 머신. 7종 유형, 5종 상태, 전이 규칙 증명"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/Task.lean"
-    sorryCount := 0 },
-
-  -- 권한 시스템
-  { domain := "Domain.Permission"
-    description := "7종 권한 모드, 4종 결정(allow/deny/ask/passthrough), 분류기, 거부 추적"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/Permission.lean"
-    sorryCount := 0 },
-
-  -- 메시지 시스템
-  { domain := "Domain.Message"
-    description := "메시지 타입 계층, 직렬화, 트랜스크립트 트리, 큐 시스템"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/Message.lean"
-    sorryCount := 0 },
-
-  -- 쿼리 엔진
-  { domain := "Domain.Query"
-    description := "Claude API 호출 루프. 스트리밍, 도구 실행, 컨텍스트 압축, 토큰 추적"
-    spec := .compiled
-    impl := .deployed
+  { domain := "Core.LlmProvider"
+    description := "LLM-agnostic provider trait. stream() + supports_model()"
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Query.lean"
-    sorryCount := 0 },
+    rustFile := "crates/core/src/llm.rs"
+    milestone := 0 },
 
-  -- 앱 상태
-  { domain := "Domain.State"
-    description := "AppState 루트. DeepImmutable. MCP, 플러그인, 태스크, 팀, UI 상태"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/State.lean"
-    sorryCount := 0 },
+  { domain := "Engine.QueryEngine"
+    description := "메인 실행 루프. stream → tool → continue/terminal"
+    spec := .compiled, impl := .implDone
+    specFile := "Specs/Domain/Query.lean"
+    rustFile := "crates/engine/src/query_engine.rs"
+    milestone := 0 },
 
-  -- 훅 시스템
-  { domain := "Domain.Hook"
-    description := "17종 이벤트 훅. 콜백, 비동기, 권한 위임"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/Hook.lean"
-    sorryCount := 0 },
+  { domain := "Engine.ToolExecutor"
+    description := "도구 병렬/순차 실행. 권한 + 훅 통합"
+    spec := .compiled, impl := .implDone
+    specFile := "Specs/Domain/Tool.lean"
+    rustFile := "crates/engine/src/executor.rs"
+    milestone := 0 },
 
-  -- 플러그인 시스템
-  { domain := "Domain.Plugin"
-    description := "플러그인 라이프사이클, 매니페스트, MCP/LSP 서버, 21종 에러 유형"
-    spec := .compiled
-    impl := .deployed
-    specFile := "Specs/Domain/Plugin.lean"
-    sorryCount := 0 },
+  { domain := "Tools.Trait"
+    description := "Tool trait + ToolRegistry + PermissionChecker + HookRunner"
+    spec := .compiled, impl := .implDone
+    specFile := "Specs/Domain/Tool.lean"
+    rustFile := "crates/tools/src/lib.rs"
+    milestone := 0 },
 
-  -- 명령어 시스템
+  { domain := "Domain.Task"
+    description := "태스크 상태 머신. Rust typestate로 전이 규칙 컴파일타임 강제"
+    spec := .compiled, impl := .implDone
+    specFile := "Specs/Domain/Task.lean"
+    rustFile := "crates/core/src/task.rs"
+    milestone := 0 },
+
+  { domain := "Domain.Permission"
+    description := "7종 권한 모드, 4종 결정, 분류기, 거부 추적"
+    spec := .compiled, impl := .implDone
+    specFile := "Specs/Domain/Permission.lean"
+    rustFile := "crates/core/src/permission.rs"
+    milestone := 0 },
+
+  -- ════════ Milestone 1: Vertical Slice (현재) ════════
+
+  { domain := "API.Claude"
+    description := "Anthropic Claude API provider. SSE 스트리밍, 인증, 재시도"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Query.lean"
+    rustFile := "crates/api/src/lib.rs"
+    milestone := 1 },
+
+  { domain := "Tools.Bash"
+    description := "셸 명령 실행 도구. 타임아웃, 출력 캡처"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Tool.lean"
+    milestone := 1 },
+
+  { domain := "Tools.FileRead"
+    description := "파일 읽기 도구. 라인 번호, 범위 지정"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Tool.lean"
+    milestone := 1 },
+
+  { domain := "Tools.FileWrite"
+    description := "파일 쓰기 도구. 생성/덮어쓰기"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Tool.lean"
+    milestone := 1 },
+
+  { domain := "CLI.Main"
+    description := "최소 CLI 진입점. stdin → engine → stdout"
+    spec := .drafted, impl := .notStarted
+    milestone := 1 },
+
+  -- ════════ Milestone 2: Expand ════════
+
+  { domain := "Tools.FileEdit"
+    description := "파일 편집 도구. 문자열 치환"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Tool.lean"
+    milestone := 2 },
+
+  { domain := "Tools.Glob"
+    description := "파일 패턴 검색"
+    spec := .compiled, impl := .notStarted
+    milestone := 2 },
+
+  { domain := "Tools.Grep"
+    description := "파일 내용 검색 (ripgrep)"
+    spec := .compiled, impl := .notStarted
+    milestone := 2 },
+
+  { domain := "Tools.Agent"
+    description := "서브에이전트 생성/관리"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Agent.lean"
+    milestone := 2 },
+
+  { domain := "TUI.Ratatui"
+    description := "ratatui 터미널 UI. 스트리밍 출력, 도구 진행, 입력"
+    spec := .drafted, impl := .notStarted
+    milestone := 2 },
+
+  { domain := "Session.Management"
+    description := "세션 저장/복원/이력"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Session.lean"
+    milestone := 2 },
+
   { domain := "Domain.Command"
-    description := "100+ 슬래시 커맨드. prompt/local/localJsx 3종, 레지스트리"
-    spec := .compiled
-    impl := .deployed
+    description := "슬래시 커맨드 레지스트리 실행"
+    spec := .compiled, impl := .notStarted
     specFile := "Specs/Domain/Command.lean"
-    sorryCount := 0 },
+    milestone := 2 },
 
-  -- 브릿지
-  { domain := "Domain.Bridge"
-    description := "리모트 컨트롤 프로토콜. WebSocket 기반 세션 제어"
-    spec := .compiled
-    impl := .deployed
+  -- ════════ Milestone 3: Polish ════════
+
+  { domain := "Plugin.MCP"
+    description := "MCP 서버 관리, 동적 도구 로드"
+    spec := .compiled, impl := .notStarted
+    specFile := "Specs/Domain/Plugin.lean"
+    milestone := 3 },
+
+  { domain := "Bridge.Remote"
+    description := "WebSocket 리모트 컨트롤"
+    spec := .compiled, impl := .notStarted
     specFile := "Specs/Domain/Bridge.lean"
-    sorryCount := 0 }
+    milestone := 3 },
+
+  { domain := "Integration.GDD"
+    description := "gdd-unified 엔진 통합 (스킬→네이티브)"
+    spec := .notStarted, impl := .notStarted
+    milestone := 3 },
+
+  { domain := "Integration.Poincare"
+    description := "poincare-retrain 엔진 통합"
+    spec := .notStarted, impl := .notStarted
+    milestone := 3 }
 ]
 
 -- ═══════════════════════════════════════════════
 -- Progress Snapshot
 -- ═══════════════════════════════════════════════
 
-/-- 진행 상태 요약. -/
 structure ProgressSnapshot where
   totalDomains    : Nat
   specCompiled    : Nat
   specProved      : Nat
-  implDeployed    : Nat
+  implDone        : Nat
   totalSorries    : Nat
+  currentMilestone : Nat
   deriving Repr
 
-/-- 현재 진행 상태 계산. -/
 def progressSnapshot : ProgressSnapshot :=
   let total := allGoals.length
   let compiled := allGoals.filter (fun g => g.spec == .compiled || g.spec == .proved || g.spec == .tested) |>.length
   let proved := allGoals.filter (fun g => g.spec == .proved || g.spec == .tested) |>.length
-  let deployed := allGoals.filter (fun g => g.impl == .deployed) |>.length
+  let done := allGoals.filter (fun g => g.impl == .implDone || g.impl == .tested || g.impl == .deployed) |>.length
   let sorries := allGoals.foldl (fun acc g => acc + g.sorryCount) 0
   { totalDomains := total
     specCompiled := compiled
     specProved := proved
-    implDeployed := deployed
-    totalSorries := sorries }
+    implDone := done
+    totalSorries := sorries
+    currentMilestone := 1 }
 
 -- ═══════════════════════════════════════════════
 -- Gap Analysis
 -- ═══════════════════════════════════════════════
 
-/-- Spec이 아직 proved가 아닌 도메인. -/
-def specGaps : List DomainGoal :=
-  allGoals.filter (fun g => g.spec != .proved && g.spec != .tested)
+/-- 현재 마일스톤의 미완료 목표. -/
+def currentGaps : List DomainGoal :=
+  allGoals.filter (fun g => g.milestone == 1 && g.impl == .notStarted)
 
 /-- sorry가 남은 도메인. -/
 def sorryGaps : List DomainGoal :=

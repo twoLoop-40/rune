@@ -4,6 +4,7 @@
 // Built-in tools (Bash, FileRead, etc.) and MCP tools all implement this.
 
 pub mod registry;
+pub mod builtin;
 
 pub use registry::ToolRegistry;
 
