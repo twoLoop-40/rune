@@ -33,6 +33,7 @@ lean_lib Specs where
     `Domain.Compaction,
     `Domain.RemoteSession,
     `Domain.Cost,
+    `Domain.CLI,
     `Project.ProjectGoalSpec
   ]
 

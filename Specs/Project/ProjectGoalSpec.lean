@@ -161,18 +161,21 @@ def allGoals : List DomainGoal := [
 
   { domain := "Tools.FileEdit"
     description := "파일 편집 도구. 문자열 치환"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Tool.lean"
+    rustFile := "crates/tools/src/builtin/file_edit.rs"
     milestone := 2 },
 
   { domain := "Tools.Glob"
     description := "파일 패턴 검색"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
+    rustFile := "crates/tools/src/builtin/glob.rs"
     milestone := 2 },
 
   { domain := "Tools.Grep"
     description := "파일 내용 검색 (ripgrep)"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
+    rustFile := "crates/tools/src/builtin/grep.rs"
     milestone := 2 },
 
   { domain := "Tools.Agent"
@@ -181,20 +184,23 @@ def allGoals : List DomainGoal := [
     specFile := "Specs/Domain/Agent.lean"
     milestone := 2 },
 
-  { domain := "TUI.Ratatui"
-    description := "ratatui 터미널 UI. 스트리밍 출력, 도구 진행, 입력"
-    spec := .drafted, impl := .notStarted
+  { domain := "CLI.REPL"
+    description := "대화형 REPL. 슬래시 커맨드, 세션 저장/복원"
+    spec := .compiled, impl := .implDone
+    specFile := "Specs/Domain/CLI.lean"
+    rustFile := "crates/cli/src/main.rs"
     milestone := 2 },
 
   { domain := "Session.Management"
-    description := "세션 저장/복원/이력"
-    spec := .compiled, impl := .notStarted
+    description := "세션 저장/복원/이력 (~/.rune/sessions/)"
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Session.lean"
+    rustFile := "crates/cli/src/session.rs"
     milestone := 2 },
 
   { domain := "Domain.Command"
     description := "슬래시 커맨드 레지스트리 실행"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .inProgress
     specFile := "Specs/Domain/Command.lean"
     milestone := 2 },
 
