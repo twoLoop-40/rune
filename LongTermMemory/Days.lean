@@ -1,1 +1,2 @@
 import LongTermMemory.Days.Day_2026_04_01
+import LongTermMemory.Days.Day_2026_04_02

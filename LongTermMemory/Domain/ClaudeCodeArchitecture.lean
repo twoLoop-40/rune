@@ -83,6 +83,21 @@ def rustRewritePlan : SemanticMemory :=
     stability := ⟨85, by omega⟩
     maturity := .raw }
 
+-- ③-2 Rust 엔진 아키텍처 (2026-04-02 추가)
+def runeEngineArch : SemanticMemory :=
+  { fact := "rune (Rust 재작성) 엔진: LlmProvider trait(LLM-agnostic) -> QueryEngine(stream->tool->loop) -> ToolExecutor(parallel/seq) -> Tool trait. StreamHandler로 UI 분리. 6 crate workspace: core(286+ 타입), engine, tools, api, tui, server."
+    domain := some "rune-architecture"
+    source := some "rune 구현 2026-04-02"
+    stability := ⟨90, by omega⟩
+    maturity := .consolidated }
+
+def runeProjectMeta : SemanticMemory :=
+  { fact := "프로젝트명 rune (Rust+Engine). GitHub: twoLoop-40/rune. 기존 claude-code(TS)의 Lean Spec 기반 풀 재작성. 사용자 비전: gdd-unified + poincare-retrain 통합 AI 개발 플랫폼."
+    domain := some "project-meta"
+    source := some "사용자 대화 2026-04-02"
+    stability := ⟨85, by omega⟩
+    maturity := .consolidated }
+
 theorem all_links_valid : specLinks.all SpecCodeLink.isValid = true := by native_decide
 
 end LongTermMemory.Domain.ClaudeCodeArchitecture
