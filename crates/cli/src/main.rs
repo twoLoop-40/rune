@@ -18,8 +18,11 @@ use claude_code_core::types::{ContentBlock, FilePath, SessionId, Timestamp, Uuid
 use claude_code_engine::executor::ToolExecutor;
 use claude_code_engine::query_engine::{QueryEngine, StreamHandler};
 use claude_code_tools::builtin::bash::BashTool;
+use claude_code_tools::builtin::file_edit::FileEditTool;
 use claude_code_tools::builtin::file_read::FileReadTool;
 use claude_code_tools::builtin::file_write::FileWriteTool;
+use claude_code_tools::builtin::glob::GlobTool;
+use claude_code_tools::builtin::grep::GrepTool;
 use claude_code_tools::{HookRunner, PermissionChecker, ToolContext, ToolOutput, ToolRegistry};
 
 // ═══════════════════════════════════════════════
@@ -162,8 +165,11 @@ async fn main() -> anyhow::Result<()> {
 
     let mut registry = ToolRegistry::new();
     registry.register(Arc::new(BashTool::new()));
+    registry.register(Arc::new(FileEditTool::new()));
     registry.register(Arc::new(FileReadTool::new()));
     registry.register(Arc::new(FileWriteTool::new()));
+    registry.register(Arc::new(GlobTool::new()));
+    registry.register(Arc::new(GrepTool::new()));
     let registry = Arc::new(registry);
 
     let executor = Arc::new(ToolExecutor::new(

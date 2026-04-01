@@ -121,36 +121,40 @@ def allGoals : List DomainGoal := [
     rustFile := "crates/core/src/permission.rs"
     milestone := 0 },
 
-  -- ════════ Milestone 1: Vertical Slice (현재) ════════
+  -- ════════ Milestone 1: Vertical Slice (완료 ✅) ════════
 
   { domain := "API.Claude"
     description := "Anthropic Claude API provider. SSE 스트리밍, 인증, 재시도"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Query.lean"
-    rustFile := "crates/api/src/lib.rs"
+    rustFile := "crates/api/src/claude.rs"
     milestone := 1 },
 
   { domain := "Tools.Bash"
     description := "셸 명령 실행 도구. 타임아웃, 출력 캡처"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Tool.lean"
+    rustFile := "crates/tools/src/builtin/bash.rs"
     milestone := 1 },
 
   { domain := "Tools.FileRead"
     description := "파일 읽기 도구. 라인 번호, 범위 지정"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Tool.lean"
+    rustFile := "crates/tools/src/builtin/file_read.rs"
     milestone := 1 },
 
   { domain := "Tools.FileWrite"
     description := "파일 쓰기 도구. 생성/덮어쓰기"
-    spec := .compiled, impl := .notStarted
+    spec := .compiled, impl := .implDone
     specFile := "Specs/Domain/Tool.lean"
+    rustFile := "crates/tools/src/builtin/file_write.rs"
     milestone := 1 },
 
   { domain := "CLI.Main"
     description := "최소 CLI 진입점. stdin → engine → stdout"
-    spec := .drafted, impl := .notStarted
+    spec := .compiled, impl := .implDone
+    rustFile := "crates/cli/src/main.rs"
     milestone := 1 },
 
   -- ════════ Milestone 2: Expand ════════
@@ -243,7 +247,7 @@ def progressSnapshot : ProgressSnapshot :=
     specProved := proved
     implDone := done
     totalSorries := sorries
-    currentMilestone := 1 }
+    currentMilestone := 2 }
 
 -- ═══════════════════════════════════════════════
 -- Gap Analysis
@@ -251,7 +255,7 @@ def progressSnapshot : ProgressSnapshot :=
 
 /-- 현재 마일스톤의 미완료 목표. -/
 def currentGaps : List DomainGoal :=
-  allGoals.filter (fun g => g.milestone == 1 && g.impl == .notStarted)
+  allGoals.filter (fun g => g.milestone == 2 && g.impl == .notStarted)
 
 /-- sorry가 남은 도메인. -/
 def sorryGaps : List DomainGoal :=

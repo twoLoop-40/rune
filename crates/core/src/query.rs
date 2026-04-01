@@ -102,8 +102,8 @@ pub enum StreamEvent {
     },
     ContentBlockDelta { index: u32, delta: String },
     ContentBlockStop { index: u32 },
-    MessageStart,
-    MessageStop { finish_reason: FinishReason },
+    MessageStart { usage: Option<TokenUsage> },
+    MessageStop { finish_reason: FinishReason, usage: Option<TokenUsage> },
 }
 
 /// Lean: `inductive CompactionStrategy`

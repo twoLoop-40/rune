@@ -9,7 +9,7 @@ use reqwest_eventsource::{Event, EventSource};
 use tokio_stream::Stream;
 
 use claude_code_core::llm::{LlmProvider, LlmRequest, LlmStream};
-use claude_code_core::query::{FinishReason, StreamEvent};
+use claude_code_core::query::{FinishReason, StreamEvent, TokenUsage};
 use claude_code_core::types::DomainError;
 
 /// Anthropic Claude API provider.
@@ -214,7 +214,10 @@ fn parse_sse_event(event_type: &str, data: &str) -> Option<Result<StreamEvent, D
     };
 
     match event_type {
-        "message_start" => Some(Ok(StreamEvent::MessageStart)),
+        "message_start" => {
+            let usage = parse_usage(&json["message"]["usage"]);
+            Some(Ok(StreamEvent::MessageStart { usage }))
+        }
 
         "content_block_start" => {
             let index = json["index"].as_u64().unwrap_or(0) as u32;
@@ -264,7 +267,8 @@ fn parse_sse_event(event_type: &str, data: &str) -> Option<Result<StreamEvent, D
                 "tool_use" => FinishReason::ToolUse,
                 _ => FinishReason::EndTurn,
             };
-            Some(Ok(StreamEvent::MessageStop { finish_reason }))
+            let usage = parse_usage(&json["usage"]);
+            Some(Ok(StreamEvent::MessageStop { finish_reason, usage }))
         }
 
         "message_stop" => None, // Already handled by message_delta
@@ -273,4 +277,17 @@ fn parse_sse_event(event_type: &str, data: &str) -> Option<Result<StreamEvent, D
 
         _ => None,
     }
+}
+
+/// Extract token usage from SSE JSON.
+fn parse_usage(json: &serde_json::Value) -> Option<TokenUsage> {
+    if json.is_null() {
+        return None;
+    }
+    Some(TokenUsage {
+        input_tokens: json["input_tokens"].as_u64().unwrap_or(0),
+        output_tokens: json["output_tokens"].as_u64().unwrap_or(0),
+        cache_creation: json["cache_creation_input_tokens"].as_u64().unwrap_or(0),
+        cache_read: json["cache_read_input_tokens"].as_u64().unwrap_or(0),
+    })
 }

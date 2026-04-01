@@ -131,7 +131,7 @@ impl QueryEngine {
             let mut current_block_type = String::new();
             let mut current_tool_id = String::new();
             let mut current_tool_name = String::new();
-            let turn_usage = TokenUsage::default();
+            let mut turn_usage = TokenUsage::default();
             let mut finish_reason = FinishReason::EndTurn;
 
             while let Some(event) = stream.next().await {
@@ -192,8 +192,17 @@ impl QueryEngine {
                             }
                         }
                     }
-                    StreamEvent::MessageStart => {}
-                    StreamEvent::MessageStop { finish_reason: fr } => {
+                    StreamEvent::MessageStart { usage } => {
+                        if let Some(u) = usage {
+                            turn_usage.input_tokens += u.input_tokens;
+                            turn_usage.cache_creation += u.cache_creation;
+                            turn_usage.cache_read += u.cache_read;
+                        }
+                    }
+                    StreamEvent::MessageStop { finish_reason: fr, usage } => {
+                        if let Some(u) = usage {
+                            turn_usage.output_tokens += u.output_tokens;
+                        }
                         finish_reason = fr;
                     }
                 }
