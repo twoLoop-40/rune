@@ -182,7 +182,7 @@ def allGoals : List DomainGoal := [
     description := "서브에이전트 생성/관리"
     spec := .compiled, impl := .notStarted
     specFile := "Specs/Domain/Agent.lean"
-    milestone := 2 },
+    milestone := 3 },
 
   { domain := "CLI.REPL"
     description := "대화형 REPL. 슬래시 커맨드, 세션 저장/복원"
@@ -205,6 +205,11 @@ def allGoals : List DomainGoal := [
     milestone := 2 },
 
   -- ════════ Milestone 3: Polish ════════
+
+  { domain := "TUI.Ratatui"
+    description := "ratatui 터미널 UI. 스트리밍, 도구 진행, 마크다운 렌더링"
+    spec := .drafted, impl := .notStarted
+    milestone := 3 },
 
   { domain := "Plugin.MCP"
     description := "MCP 서버 관리, 동적 도구 로드"
