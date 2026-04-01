@@ -222,7 +222,18 @@ fn parse_sse_event(event_type: &str, data: &str) -> Option<Result<StreamEvent, D
                 .as_str()
                 .unwrap_or("text")
                 .to_string();
-            Some(Ok(StreamEvent::ContentBlockStart { index, block_type }))
+            let tool_use_id = json["content_block"]["id"]
+                .as_str()
+                .map(|s| s.to_string());
+            let tool_name = json["content_block"]["name"]
+                .as_str()
+                .map(|s| s.to_string());
+            Some(Ok(StreamEvent::ContentBlockStart {
+                index,
+                block_type,
+                tool_use_id,
+                tool_name,
+            }))
         }
 
         "content_block_delta" => {

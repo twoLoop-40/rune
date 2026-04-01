@@ -92,7 +92,14 @@ impl QueryResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum StreamEvent {
-    ContentBlockStart { index: u32, block_type: String },
+    ContentBlockStart {
+        index: u32,
+        block_type: String,
+        /// For tool_use blocks: the tool use ID
+        tool_use_id: Option<String>,
+        /// For tool_use blocks: the tool name
+        tool_name: Option<String>,
+    },
     ContentBlockDelta { index: u32, delta: String },
     ContentBlockStop { index: u32 },
     MessageStart,

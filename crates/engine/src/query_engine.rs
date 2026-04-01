@@ -128,25 +128,68 @@ impl QueryEngine {
             let mut assistant_content: Vec<ContentBlock> = Vec::new();
             let mut tool_calls: Vec<ToolCall> = Vec::new();
             let mut current_text = String::new();
+            let mut current_block_type = String::new();
+            let mut current_tool_id = String::new();
+            let mut current_tool_name = String::new();
             let turn_usage = TokenUsage::default();
             let mut finish_reason = FinishReason::EndTurn;
 
             while let Some(event) = stream.next().await {
                 match event? {
-                    StreamEvent::ContentBlockStart { index: _, block_type: _ } => {
+                    StreamEvent::ContentBlockStart {
+                        block_type,
+                        tool_use_id,
+                        tool_name,
+                        ..
+                    } => {
                         current_text.clear();
+                        current_block_type = block_type;
+                        if let Some(id) = tool_use_id {
+                            current_tool_id = id;
+                        }
+                        if let Some(name) = &tool_name {
+                            current_tool_name = name.clone();
+                            self.handler
+                                .on_tool_use_start(name, &current_tool_id)
+                                .await;
+                        }
                     }
-                    StreamEvent::ContentBlockDelta { index: _, delta } => {
-                        // Accumulate delta into current block
-                        // In a real implementation, we'd distinguish text vs tool_use deltas
+                    StreamEvent::ContentBlockDelta { delta, .. } => {
                         current_text.push_str(&delta);
-                        self.handler.on_text(&delta).await;
+                        if current_block_type == "text" {
+                            self.handler.on_text(&delta).await;
+                        }
                     }
-                    StreamEvent::ContentBlockStop { index: _ } => {
-                        if !current_text.is_empty() {
-                            assistant_content.push(ContentBlock::Text {
-                                content: current_text.clone(),
-                            });
+                    StreamEvent::ContentBlockStop { .. } => {
+                        match current_block_type.as_str() {
+                            "tool_use" => {
+                                // Parse accumulated JSON input
+                                let input: serde_json::Value =
+                                    serde_json::from_str(&current_text).unwrap_or_default();
+                                assistant_content.push(ContentBlock::ToolUse {
+                                    id: current_tool_id.clone(),
+                                    name: current_tool_name.clone(),
+                                    input: input.clone(),
+                                });
+                                tool_calls.push(ToolCall {
+                                    tool_use_id: current_tool_id.clone(),
+                                    tool_name: current_tool_name.clone(),
+                                    input,
+                                });
+                            }
+                            "thinking" => {
+                                self.handler.on_thinking(&current_text).await;
+                                assistant_content.push(ContentBlock::Thinking {
+                                    content: current_text.clone(),
+                                });
+                            }
+                            _ => {
+                                if !current_text.is_empty() {
+                                    assistant_content.push(ContentBlock::Text {
+                                        content: current_text.clone(),
+                                    });
+                                }
+                            }
                         }
                     }
                     StreamEvent::MessageStart => {}
@@ -173,17 +216,6 @@ impl QueryEngine {
             turn_count += 1;
 
             // Phase: toolExecution (if any tool_use blocks)
-            // Extract tool calls from assistant content
-            for block in &assistant_content {
-                if let ContentBlock::ToolUse { id, name, input } = block {
-                    tool_calls.push(ToolCall {
-                        tool_use_id: id.clone(),
-                        tool_name: name.clone(),
-                        input: input.clone(),
-                    });
-                }
-            }
-
             if tool_calls.is_empty() {
                 // No tool calls → terminal
                 return Ok(EngineResult {

@@ -126,6 +126,9 @@ impl StreamHandler for StdoutHandler {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load .env file (silently ignore if not found)
+    dotenvy::dotenv().ok();
+
     let cli = Cli::parse();
 
     // Get prompt
